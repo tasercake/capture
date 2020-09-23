@@ -1,13 +1,12 @@
-import React, { Fragment, useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
-import Button from 'react-bootstrap/Button';
 import routes from '../constants/routes.json';
 
 export default function Navigation() {
   return (
-    <Navbar variant="dark" bg="info" expand="lg" sticky="top">
+    <Navbar variant="dark" bg="dark" expand="sm" sticky="top">
       <Navbar.Brand>CapCast</Navbar.Brand>
       <Navbar.Toggle aria-controls="navbar-nav" />
       <Navbar.Collapse id="navbar-nav">
