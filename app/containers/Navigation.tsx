@@ -11,12 +11,20 @@ export default function Navigation() {
       <Navbar.Toggle aria-controls="navbar-nav" />
       <Navbar.Collapse id="navbar-nav">
         <Nav>
-          <Nav.Link as={Link} to={routes.HOME}>Home</Nav.Link>
-          <Nav.Link as={Link} to={routes.COUNTER}>Counter</Nav.Link>
-          <Nav.Link as={Link} to={routes.CAPTURE}>Capture</Nav.Link>
-          <Nav.Link as={Link} to="/broken-link">Broken</Nav.Link>
+          <Nav.Link as={Link} to={routes.HOME}>
+            Home
+          </Nav.Link>
+          <Nav.Link as={Link} to={routes.COUNTER}>
+            Counter
+          </Nav.Link>
+          <Nav.Link as={Link} to={routes.CAPTURE}>
+            Capture
+          </Nav.Link>
+          <Nav.Link as={Link} to="/broken-link">
+            Broken
+          </Nav.Link>
         </Nav>
       </Navbar.Collapse>
     </Navbar>
-  )
+  );
 }

@@ -1,19 +1,12 @@
-import React, { Fragment, useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import ReactJson from 'react-json-view';
+import React, { useState, useEffect } from 'react';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
-import CardGroup from 'react-bootstrap/CardGroup';
-import CardColumns from 'react-bootstrap/CardColumns';
-import CardDeck from 'react-bootstrap/CardDeck';
 import Card from 'react-bootstrap/Card';
 import { desktopCapturer, DesktopCapturerSource } from 'electron';
-import routes from '../../constants/routes.json';
 
 // function AudioDevice() {
 //   return (
@@ -50,26 +43,25 @@ export default function Selector() {
       return 0;
     };
 
-    desktopCapturer
+    return desktopCapturer
       .getSources({
         types: ['screen', 'window'],
         thumbnailSize: { height: 256, width: 256 },
       })
       .then((sources) => {
-        sources = sources.sort(compareFn);
-        const splitSources = sources.reduce(
-          (acc: Record<string, DesktopCapturerSource[]>, cur) => {
+        const splitSources = sources
+          .sort(compareFn)
+          .reduce((acc: Record<string, DesktopCapturerSource[]>, cur) => {
             const key = cur.id.split(':')[0];
             return { ...acc, [key]: acc[key] ? acc[key].concat([cur]) : [cur] };
-          },
-          {}
-        );
+          }, {});
         setDesktopSources(splitSources);
+        return splitSources;
       });
   };
 
   const refreshDeviceSources = () => {
-    navigator.mediaDevices.enumerateDevices().then((devices) => {
+    return navigator.mediaDevices.enumerateDevices().then((devices) => {
       const splitDevices = devices.reduce(
         (acc: Record<string, MediaDeviceInfo[]>, cur) => ({
           ...acc,
@@ -78,6 +70,7 @@ export default function Selector() {
         {}
       );
       setDeviceSources(splitDevices);
+      return splitDevices;
     });
   };
 

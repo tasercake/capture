@@ -8,8 +8,8 @@ import CapturePage from './CapturePage';
 import NotFoundPage from './NotFoundPage';
 
 // Lazily load routes and code split with webpack
-const LazyCounterPage = React.lazy(() =>
-  import(/* webpackChunkName: "CounterPage" */ './CounterPage')
+const LazyCounterPage = React.lazy(
+  () => import(/* webpackChunkName: "CounterPage" */ './CounterPage')
 );
 const CounterPage = (props: Record<string, any>) => (
   <React.Suspense fallback={<h1>Loading...</h1>}>

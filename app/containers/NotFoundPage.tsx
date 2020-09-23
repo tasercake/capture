@@ -6,7 +6,9 @@ export default function NotFoundPage() {
   return (
     <div>
       <h1>404 - Not Found</h1>
-      <Link to={routes.HOME}><h2>Go Home</h2></Link>
+      <Link to={routes.HOME}>
+        <h2>Go Home</h2>
+      </Link>
     </div>
   );
 }
