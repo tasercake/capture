@@ -1,10 +1,36 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
+import { HashRouter as Router, Switch, Route } from 'react-router-dom';
+import { Container, Row, Col } from 'react-bootstrap';
+import Navigation from './Navigation';
+import routes from '../constants/routes.json';
+import HomePage from './HomePage';
+import CapturePage from './CapturePage';
+import NotFoundPage from './NotFoundPage';
 
-type Props = {
-  children: ReactNode;
-};
+// Lazily load routes and code split with webpack
+const LazyCounterPage = React.lazy(() =>
+  import(/* webpackChunkName: "CounterPage" */ './CounterPage')
+);
+const CounterPage = (props: Record<string, any>) => (
+  <React.Suspense fallback={<h1>Loading...</h1>}>
+    <LazyCounterPage {...props} />
+  </React.Suspense>
+);
 
-export default function App(props: Props) {
-  const { children } = props;
-  return <>{children}</>;
+export default function App() {
+  return (
+    <>
+      <Navigation/>
+      <Container fluid>
+        <Router>
+          <Switch>
+            <Route path={routes.COUNTER} component={CounterPage} />
+            <Route path={routes.CAPTURE} component={CapturePage} />
+            <Route exact path={routes.HOME} component={HomePage} />
+            <Route component={NotFoundPage} />
+          </Switch>
+        </Router>
+      </Container>
+    </>
+  )
 }
