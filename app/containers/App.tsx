@@ -1,6 +1,5 @@
 import React from 'react';
 import { HashRouter as Router, Switch, Route } from 'react-router-dom';
-import { Container } from 'react-bootstrap';
 import Navigation from './Navigation';
 import routes from '../constants/routes.json';
 import HomePage from './HomePage';
@@ -21,16 +20,14 @@ export default function App() {
   return (
     <>
       <Navigation />
-      <Container fluid>
-        <Router>
-          <Switch>
-            <Route path={routes.COUNTER} component={CounterPage} />
-            <Route path={routes.CAPTURE} component={CapturePage} />
-            <Route exact path={routes.HOME} component={HomePage} />
-            <Route component={NotFoundPage} />
-          </Switch>
-        </Router>
-      </Container>
+      <Router>
+        <Switch>
+          <Route path={routes.COUNTER} component={CounterPage} />
+          <Route path={routes.CAPTURE} component={CapturePage} />
+          <Route exact path={routes.HOME} component={HomePage} />
+          <Route component={NotFoundPage} />
+        </Switch>
+      </Router>
     </>
   );
 }
