@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, CSSProperties } from 'react';
+import { desktopCapturer, DesktopCapturerSource } from 'electron';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
@@ -6,7 +7,7 @@ import Button from 'react-bootstrap/Button';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
 import Card from 'react-bootstrap/Card';
-import { desktopCapturer, DesktopCapturerSource } from 'electron';
+import Spinner from 'react-bootstrap/Spinner';
 
 const desktopSourceTypes: Record<string, string> = {
   screen: 'Screen',
@@ -18,7 +19,13 @@ const deviceSourceTypes: Record<string, string> = {
   videoinput: 'Video Input',
 };
 
-function DesktopSourcePreview({source, onClick}: {source: DesktopCapturerSource, onClick: Function}) {
+function DesktopSourcePreview({
+  source,
+  onClick,
+}: {
+  source: DesktopCapturerSource;
+  onClick: Function;
+}) {
   return (
     <Card
       onClick={() => onClick()}
@@ -28,10 +35,16 @@ function DesktopSourcePreview({source, onClick}: {source: DesktopCapturerSource,
       <Card.Img src={source.thumbnail.toDataURL()} />
       <Card.Header>{source.name}</Card.Header>
     </Card>
-  )
+  );
 }
 
-function DeviceSourcePreview({source, onClick}: {source: MediaDeviceInfo, onClick: Function}) {
+function DeviceSourcePreview({
+  source,
+  onClick,
+}: {
+  source: MediaDeviceInfo;
+  onClick: Function;
+}) {
   return (
     <Card
       onClick={() => onClick(source)}
@@ -42,7 +55,43 @@ function DeviceSourcePreview({source, onClick}: {source: MediaDeviceInfo, onClic
         <Card.Title>{source.label}</Card.Title>
       </Card.Body>
     </Card>
-  )
+  );
+}
+
+function MediaPreview({
+  stream,
+  playing = false,
+}: {
+  stream: MediaStream | null;
+  playing?: boolean;
+}) {
+  const mediaElement = useRef<HTMLMediaElement>(null);
+  useEffect(() => {
+    if (mediaElement.current) {
+      mediaElement.current.srcObject = stream;
+    }
+  }, [stream]);
+
+  const videoStyle: CSSProperties = {
+    minWidth: '100%',
+    maxWidth: '100%',
+    maxHeight: '100%',
+  };
+
+  return stream ? (
+    stream.getVideoTracks().length > 0 ? (
+      <video
+        ref={mediaElement}
+        style={videoStyle}
+        playsInline
+        autoPlay={playing}
+      />
+    ) : (
+      <audio ref={mediaElement} playsInline autoPlay={playing} />
+    )
+  ) : (
+    <Spinner animation="border" />
+  );
 }
 
 export default function Selector() {
@@ -53,27 +102,13 @@ export default function Selector() {
   const [deviceSources, setDeviceSources] = useState<
     Record<string, MediaDeviceInfo[]>
   >({});
-  const [activeSource, setActiveSource] = useState<MediaDeviceInfo | DesktopCapturerSource>();
+  const [activeSource, setActiveSource] = useState<
+    MediaDeviceInfo | DesktopCapturerSource | null
+  >(null);
   const [activeTab, setActiveTab] = useState<string | null>('desktop');
-  const [stream, setStream] = useState<MediaStream>();
-
-  const userMedia = useRef();
-
-  const onSourceSelected = (source: MediaDeviceInfo | DesktopCapturerSource) => {
-    setActiveSource(source)
-  }
-
-  useEffect(() => {
-    navigator.mediaDevices.getUserMedia({video: true, audio: true})
-      .then((stream) => {
-        setStream(stream);
-        // console.log(userMedia.current.srcObject)
-        if (userMedia.current) {
-          userMedia.current.srcObject = stream;
-          userMedia.current.onloadedmetadata = (e) => userMedia.current.play()
-        }
-      })
-  }, [activeSource])
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const streamRef = useRef<MediaStream>();
+  const userMedia = useRef<HTMLMediaElement>();
 
   const refreshDesktopSources = () => {
     const compareFn = (a: DesktopCapturerSource, b: DesktopCapturerSource) => {
@@ -100,7 +135,6 @@ export default function Selector() {
         return splitSources;
       });
   };
-
   const refreshDeviceSources = () => {
     return navigator.mediaDevices.enumerateDevices().then((devices) => {
       const splitDevices = devices.reduce(
@@ -114,82 +148,135 @@ export default function Selector() {
       return splitDevices;
     });
   };
+  const sourceRefreshers: Record<string, Function> = {
+    desktop: refreshDesktopSources,
+    device: refreshDeviceSources,
+  };
 
+  const onSourceSelected = (
+    source: MediaDeviceInfo | DesktopCapturerSource
+  ) => {
+    setActiveSource(source);
+  };
+
+  // Fetch media stream and pass to media element
   useEffect(() => {
-    if (activeTab === 'desktop') {
-      refreshDesktopSources();
+    if (activeSource) {
+      navigator.mediaDevices
+        .getUserMedia({
+          // video: {
+          //     deviceId: { exact: activeSource instanceof MediaDeviceInfo ? activeSource.deviceId : activeSource.id },
+          // },
+          // audio: true,
+          audio: false,
+          video: {
+            mandatory: {
+              chromeMediaSource: 'desktop',
+              chromeMediaSourceId: activeSource.id,
+              // minWidth: 1280,
+              maxWidth: 1280,
+              // minHeight: 720,
+              // maxHeight: 720,
+              minFrameRate: 60,
+            },
+          },
+        })
+        .then((s) => {
+          setStream(s);
+          if (userMedia.current) {
+            userMedia.current.srcObject = s;
+          }
+        });
     }
-  }, [activeTab]);
+    return () => {
+      streamRef.current?.getTracks().forEach((track) => {
+        track.stop();
+      });
+    };
+  }, [activeSource]);
 
+  // Maintain stream ref
   useEffect(() => {
-    if (activeTab === 'device') {
-      refreshDeviceSources();
+    if (stream) {
+      streamRef.current = stream;
+    }
+  }, [stream]);
+
+  // Refresh media sources on tab change
+  useEffect(() => {
+    if (activeTab) {
+      const refreshSource = sourceRefreshers[activeTab];
+      if (refreshSource) {
+        refreshSource();
+      } else {
+        console.error(
+          `No source refresher function found for tab ${activeTab}`
+        );
+      }
     }
   }, [activeTab]);
 
   return (
-    <>
-      {activeSource && (activeSource.name ? activeSource.name : activeSource.label)}
-      {
-        // <video ref={userMedia} autoPlay playsInline/>
-        <video ref={userMedia} playsInline/>
-      }
-
-      {/* DON'T TOUCH BELOW */}
-      <Tabs
-        defaultActiveKey="desktop"
-        activeKey={activeTab}
-        onSelect={(k) => setActiveTab(k)}
-        transition={false}
-      >
-        <Tab eventKey="desktop" title="Desktop Sources">
-          {Object.keys(desktopSources).map((sourceType) => (
-            <Container fluid className="" key={sourceType}>
-              <Row className="m-0">
-                <h3>{`${desktopSourceTypes[sourceType]} sources`}</h3>
-              </Row>
-              <Row className="my-3">
-                {desktopSources[sourceType].map((source) => (
-                  <Col
-                    xs={12}
-                    sm={6}
-                    md={4}
-                    lg={3}
-                    key={source.id}
-                  >
-                    <DesktopSourcePreview source={source} onClick={() => onSourceSelected(source)} />
-                  </Col>
-                ))}
-              </Row>
-            </Container>
-          ))}
-          <Button onClick={refreshDesktopSources}>Refresh</Button>
-        </Tab>
-        <Tab eventKey="device" title="Device Sources">
-          {Object.keys(deviceSources).map((sourceType) => (
-            <Container fluid key={sourceType}>
-              <Row>
-                <h3>{`${deviceSourceTypes[sourceType]}s`}</h3>
-              </Row>
-              <Row className="my-3">
-                {deviceSources[sourceType].map((source) => (
-                  <Col
-                    xs={12}
-                    sm={6}
-                    md={4}
-                    lg={3}
-                    className="my-3"
-                    key={source.deviceId}
-                  >
-                    <DeviceSourcePreview source={source} onClick={() => onSourceSelected(source)}/>
-                  </Col>
-                ))}
-              </Row>
-            </Container>
-          ))}
-          <Button onClick={refreshDeviceSources}>Refresh</Button>
-        </Tab>
-      </Tabs>
-    </>
+    <Container fluid>
+      <Row>
+        <Tabs
+          defaultActiveKey="desktop"
+          activeKey={activeTab}
+          onSelect={(k) => setActiveTab(k)}
+          transition={false}
+        >
+          <Tab eventKey="desktop" title="Desktop Sources">
+            {Object.keys(desktopSources).map((sourceType) => (
+              <Container fluid className="" key={sourceType}>
+                <Row className="m-0">
+                  <h3>{`${desktopSourceTypes[sourceType]} sources`}</h3>
+                </Row>
+                <Row className="my-3">
+                  {desktopSources[sourceType].map((source) => (
+                    <Col xs={12} sm={6} md={4} lg={3} key={source.id}>
+                      <DesktopSourcePreview
+                        source={source}
+                        onClick={() => onSourceSelected(source)}
+                      />
+                    </Col>
+                  ))}
+                </Row>
+              </Container>
+            ))}
+            <Button onClick={refreshDesktopSources}>Refresh</Button>
+          </Tab>
+          <Tab eventKey="device" title="Device Sources">
+            {Object.keys(deviceSources).map((sourceType) => (
+              <Container fluid key={sourceType}>
+                <Row>
+                  <h3>{`${deviceSourceTypes[sourceType]}s`}</h3>
+                </Row>
+                <Row className="my-3">
+                  {deviceSources[sourceType].map((source) => (
+                    <Col
+                      xs={12}
+                      sm={6}
+                      md={4}
+                      lg={3}
+                      className="my-3"
+                      key={source.deviceId}
+                    >
+                      <DeviceSourcePreview
+                        source={source}
+                        onClick={() => onSourceSelected(source)}
+                      />
+                    </Col>
+                  ))}
+                </Row>
+              </Container>
+            ))}
+            <Button onClick={refreshDeviceSources}>Refresh</Button>
+          </Tab>
+        </Tabs>
+      </Row>
+      <Row>
+        <MediaPreview stream={stream} playing />
+      </Row>
+    </Container>
   );
 }

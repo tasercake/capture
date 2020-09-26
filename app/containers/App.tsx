@@ -1,5 +1,6 @@
 import React from 'react';
 import { HashRouter as Router, Switch, Route } from 'react-router-dom';
+import { Container, Row } from 'react-bootstrap';
 import Navigation from './Navigation';
 import routes from '../constants/routes.json';
 import HomePage from './HomePage';
@@ -18,16 +19,20 @@ const CounterPage = (props: Record<string, any>) => (
 
 export default function App() {
   return (
-    <>
-      <Navigation />
-      <Router>
-        <Switch>
-          <Route path={routes.COUNTER} component={CounterPage} />
-          <Route path={routes.CAPTURE} component={CapturePage} />
-          <Route exact path={routes.HOME} component={HomePage} />
-          <Route component={NotFoundPage} />
-        </Switch>
-      </Router>
-    </>
+    <Container fluid>
+      <Row>
+        <Navigation />
+      </Row>
+      <Row>
+        <Router>
+          <Switch>
+            <Route path={routes.COUNTER} component={CounterPage} />
+            <Route path={routes.CAPTURE} component={CapturePage} />
+            <Route exact path={routes.HOME} component={HomePage} />
+            <Route component={NotFoundPage} />
+          </Switch>
+        </Router>
+      </Row>
+    </Container>
   );
 }

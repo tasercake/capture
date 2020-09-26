@@ -6,7 +6,13 @@ import routes from '../constants/routes.json';
 
 export default function Navigation() {
   return (
-    <Navbar variant="dark" bg="dark" expand="sm" sticky="top">
+    <Navbar
+      style={{ width: '100%' }}
+      variant="dark"
+      bg="dark"
+      expand="sm"
+      sticky="top"
+    >
       <Navbar.Brand>CapCast</Navbar.Brand>
       <Navbar.Toggle aria-controls="navbar-nav" />
       <Navbar.Collapse id="navbar-nav">
