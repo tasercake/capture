@@ -87,7 +87,7 @@ function MediaPreview({
         autoPlay={playing}
       />
     ) : (
-      <audio ref={mediaElement} playsInline autoPlay={playing} />
+      <audio ref={mediaElement} playsInline autoPlay={playing} controls/>
     )
   ) : (
     <Spinner animation="border" />
@@ -162,25 +162,27 @@ export default function Selector() {
   // Fetch media stream and pass to media element
   useEffect(() => {
     if (activeSource) {
-      navigator.mediaDevices
-        .getUserMedia({
-          // video: {
-          //     deviceId: { exact: activeSource instanceof MediaDeviceInfo ? activeSource.deviceId : activeSource.id },
-          // },
-          // audio: true,
-          audio: false,
-          video: {
-            mandatory: {
-              chromeMediaSource: 'desktop',
-              chromeMediaSourceId: activeSource.id,
-              // minWidth: 1280,
-              maxWidth: 1280,
-              // minHeight: 720,
-              // maxHeight: 720,
-              minFrameRate: 60,
-            },
+      const mediaConstraints: any = { audio: false, video: false };
+      if (activeSource instanceof MediaDeviceInfo) {
+        if (activeSource.kind === 'videoinput') {
+          mediaConstraints.video = { deviceId: activeSource.deviceId }
+        }
+        if (activeSource.kind.startsWith('audio')) {
+          mediaConstraints.audio = { deviceId: activeSource.deviceId}
+        }
+      } else {
+        mediaConstraints.audio = false;
+        mediaConstraints.video = {
+          mandatory: {
+            chromeMediaSource: 'desktop',
+            chromeMediaSourceId: activeSource.id,
+            maxWidth: 1280,
+            minFrameRate: 60,
           },
-        })
+        }
+      }
+      navigator.mediaDevices
+        .getUserMedia(mediaConstraints)
         .then((s) => {
           setStream(s);
           if (userMedia.current) {
