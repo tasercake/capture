@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, CSSProperties } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { desktopCapturer, DesktopCapturerSource } from 'electron';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
@@ -6,96 +6,9 @@ import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
-import Card from 'react-bootstrap/Card';
-import Spinner from 'react-bootstrap/Spinner';
-
-const desktopSourceTypes: Record<string, string> = {
-  screen: 'Screen',
-  window: 'Window',
-};
-const deviceSourceTypes: Record<string, string> = {
-  audioinput: 'Audio Input',
-  audiooutput: 'Audio Output',
-  videoinput: 'Video Input',
-};
-
-function DesktopSourcePreview({
-  source,
-  onClick,
-}: {
-  source: DesktopCapturerSource;
-  onClick: Function;
-}) {
-  return (
-    <Card
-      onClick={() => onClick()}
-      className="user-select-none"
-      style={{ cursor: 'pointer' }}
-    >
-      <Card.Img src={source.thumbnail.toDataURL()} />
-      <Card.Header>{source.name}</Card.Header>
-    </Card>
-  );
-}
-
-function DeviceSourcePreview({
-  source,
-  onClick,
-}: {
-  source: MediaDeviceInfo;
-  onClick: Function;
-}) {
-  return (
-    <Card
-      onClick={() => onClick(source)}
-      className="user-select-none"
-      style={{ cursor: 'pointer' }}
-    >
-      <Card.Body>
-        <Card.Title>{source.label}</Card.Title>
-      </Card.Body>
-    </Card>
-  );
-}
-
-function MediaPreview({
-  stream,
-  playing = false,
-}: {
-  stream: MediaStream | null;
-  playing?: boolean;
-}) {
-  const mediaElement = useRef<HTMLMediaElement>(null);
-  useEffect(() => {
-    if (mediaElement.current) {
-      mediaElement.current.srcObject = stream;
-    }
-  }, [stream]);
-
-  const videoStyle: CSSProperties = {
-    minWidth: '100%',
-    maxWidth: '100%',
-    maxHeight: '100%',
-  };
-
-  return stream ? (
-    stream.getVideoTracks().length > 0 ? (
-      <video
-        ref={mediaElement}
-        style={videoStyle}
-        playsInline
-        autoPlay={playing}
-      />
-    ) : (
-      <audio ref={mediaElement} playsInline autoPlay={playing} controls/>
-    )
-  ) : (
-    <Spinner animation="border" />
-  );
-}
+import { MediaPreview, deviceSourceTypes, desktopSourceTypes, DeviceSourcePreview, DesktopSourcePreview} from './Previews';
 
 export default function Selector() {
-  // TODO: SPLIT DESKTOP AND DEVICE SOURCES INTO SEPARATE COMPONENTS
   const [desktopSources, setDesktopSources] = useState<
     Record<string, DesktopCapturerSource[]>
   >({});
