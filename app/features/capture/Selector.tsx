@@ -131,6 +131,15 @@ export default function Selector() {
     }
   }, [activeTab]);
 
+  // Attach callback to refresh media devices
+  useEffect(() => {
+    navigator.mediaDevices.ondevicechange = refreshDeviceSources
+  }, [])
+
+  useEffect(() => {
+    // navigator.mediaDevices.getDisplayMedia()
+  }, [])
+
   return (
     <Container fluid>
       <Row>
