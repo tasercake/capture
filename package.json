@@ -1,6 +1,6 @@
 {
   "name": "electron-react-boilerplate",
-  "productName": "CapCast",
+  "productName": "Lyghts",
   "version": "1.3.0",
   "description": "Electron application boilerplate based on React, React Router, Webpack, React Hot Loader for rapid application development",
   "scripts": {
@@ -52,8 +52,8 @@
     ]
   },
   "build": {
-    "productName": "CapCast",
-    "appId": "com.tasercake.CapCast",
+    "productName": "Lyghts",
+    "appId": "com.tasercake.Lyghts",
     "files": [
       "dist/",
       "node_modules/",

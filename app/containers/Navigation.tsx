@@ -13,7 +13,7 @@ export default function Navigation() {
       expand="sm"
       sticky="top"
     >
-      <Navbar.Brand>CapCast</Navbar.Brand>
+      <Navbar.Brand>Lyghts</Navbar.Brand>
       <Navbar.Toggle aria-controls="navbar-nav" />
       <Navbar.Collapse id="navbar-nav">
         <Nav>
